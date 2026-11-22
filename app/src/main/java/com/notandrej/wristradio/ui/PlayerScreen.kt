@@ -2,7 +2,6 @@ package com.notandrej.wristradio.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,17 +26,12 @@ import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.VolumeDown
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,32 +51,27 @@ import kotlin.math.roundToInt
  * The now-playing face: what is on, whether it is actually playing, transport,
  * volume and the favourite star.
  *
- * The content is deliberately longer than one round screen, so a finger scrolls
- * it with [verticalScroll] (which does not claim rotary input) while the crown
- * is ours to use for volume - the watch equivalent of a radio's volume dial.
+ * The content is longer than one round screen, so a finger scrolls it, and the
+ * two volume chips are the volume control.
+ *
+ * A note for whoever comes next: this screen used to hand the whole screen to
+ * `onRotaryScrollEvent` so the crown worked as a volume dial. On the target
+ * watch that turned out to steal a *touch* scroll too - once the content was
+ * scrolled to its end, a further swipe was delivered as a rotary event and
+ * quietly dropped the volume by 70%. A volume control that changes itself while
+ * you scroll is worse than no crown support, so explicit chips win.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun PlayerScreen(state: PlaybackState, onBack: () -> Unit) {
     BackHandler { onBack() }
 
     val favourites by Favourites.items.collectAsState()
-    val focusRequester = remember { FocusRequester() }
     val scroll = rememberScrollState()
 
     val station = state.station
     val isFavourite = station != null && favourites.any { it.uuid == station.uuid }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .onRotaryScrollEvent { event ->
-                PlaybackConnection.adjustVolume(event.verticalScrollPixels / VOLUME_PER_PIXEL)
-                true
-            }
-            .focusRequester(focusRequester)
-            .focusable()
-    ) {
+    Box(Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -236,9 +225,6 @@ fun PlayerScreen(state: PlaybackState, onBack: () -> Unit) {
 
         TimeText(modifier = Modifier.align(Alignment.TopCenter))
     }
-
-    // Take focus so the crown drives volume rather than the system.
-    LaunchedEffect(Unit) { runCatching { focusRequester.requestFocus() } }
 }
 
 @Composable
@@ -294,6 +280,3 @@ private fun VolumeBar(volume: Float) {
         )
     }
 }
-
-/** Crown travel, in pixels of scroll, for one full 0..1 volume sweep. */
-private const val VOLUME_PER_PIXEL = 300f
