@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">WristRadio</string>
+    <string name="player_channel_name">Playback</string>
+    <string name="player_channel_description">Keeps the radio station playing while the screen is off</string>
+</resources>

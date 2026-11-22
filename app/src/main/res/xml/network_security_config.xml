@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Internet radio is a wild place: a large share of the stations in the
+  radio-browser.info directory still broadcast over plain HTTP (and many of the
+  HTTPS ones redirect through plain-HTTP CDNs). An internet radio player cannot
+  work behind the platform's default cleartext block, so cleartext is permitted
+  here. Nothing but audio streams and the directory API is ever fetched.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
